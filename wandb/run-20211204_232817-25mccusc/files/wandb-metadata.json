@@ -1,0 +1,18 @@
+{
+    "os": "Windows-10-10.0.19041-SP0",
+    "python": "3.6.13",
+    "heartbeatAt": "2021-12-04T15:28:24.917734",
+    "startedAt": "2021-12-04T15:28:17.521281",
+    "docker": null,
+    "gpu": "GeForce GTX 1060",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "D:/Pytorch-UNet-master/train.py",
+    "codePath": "train.py",
+    "host": "LAPTOP-6M5047O6",
+    "username": "rzhevcherkasy",
+    "executable": "D:\\anaconda3\\envs\\unet\\python.exe"
+}
