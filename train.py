@@ -1,5 +1,7 @@
 import argparse
+import glob
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -11,10 +13,11 @@ from torch import optim
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 
-from utils.data_loading import BasicDataset, CarvanaDataset
-from utils.dice_score import dice_loss
 from evaluate import evaluate
 from unet import UNet
+from utils.data_loading import BasicDataset, CarvanaDataset
+from utils.dice_score import dice_loss
+from dealdata import dealdata
 
 dir_img = Path('./data/imgs/')
 dir_mask = Path('./data/masks/')
@@ -88,10 +91,10 @@ def train_net(net,
                 images = images.to(device=device, dtype=torch.float32)
                 true_masks = true_masks.to(device=device, dtype=torch.long)
 
-                #二分类
-                true_masks=(true_masks/255).long()
+                # 二分类
+                true_masks = (true_masks / 255).long()
                 # true_masks = true_masks.squeeze(dim=0).tolist()
-                #多分
+                # 多分
                 # for i in range(2):
                 #
                 # a=true_masks.tolist()
@@ -170,12 +173,32 @@ def get_args():
     parser.add_argument('--validation', '-v', dest='val', type=float, default=10.0,
                         help='Percent of the data that is used as validation (0-100)')
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
+    parser.add_argument('--niipath', type=str, default="D:\Download\MICCAI_BraTS_2019_Data_Training\HGG",
+                        help='Use mixed precision')
+    parser.add_argument('--datapathimg', type=str, default="./data/img",
+                        help='Use mixed precision')
+    parser.add_argument('--datapathlabel', type=str, default="./data/masks",
+                        help='Use mixed precision')
 
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = get_args()
+    TrainingImagesList=[]
+    TrainingLabelsList=[]
+    folder = os.listdir(args.niipath)
+    for i, path in enumerate(folder):
+        nowpath = os.path.join(args.niipath, path)
+        nnidata = os.listdir(nowpath)
+        for data in nnidata:
+            if data.split("_")[-1].split(".")[0] == "seg":
+                readfolderT = os.path.join(nowpath, data)
+            if data.split("_")[-1].split(".")[0] == "flair":
+                readfolderL = os.path.join(nowpath, data)
+        a=[]
+        b=[]
+        a,b=dealdata(readfolderT,readfolderL,args.datapathlabel,args.datapathlabel,a,b)
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
