@@ -1,1 +1,0 @@
-# Medical-Image-segementation-Based-on-U-net
