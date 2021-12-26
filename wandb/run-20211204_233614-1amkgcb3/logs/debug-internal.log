@@ -1,0 +1,70 @@
+2021-12-04 23:36:18,214 INFO    MainThread:32884 [internal.py:wandb_internal():90] W&B internal server running at pid: 32884, started at: 2021-12-04 23:36:18.214049
+2021-12-04 23:36:18,214 INFO    WriterThread:32884 [datastore.py:open_for_write():77] open: D:\Pytorch-UNet-master\wandb\run-20211204_233614-1amkgcb3\run-1amkgcb3.wandb
+2021-12-04 23:36:18,214 DEBUG   HandlerThread:32884 [handler.py:handle_request():130] handle_request: check_version
+2021-12-04 23:36:18,229 DEBUG   SenderThread:32884 [sender.py:send():238] send: header
+2021-12-04 23:36:18,229 DEBUG   SenderThread:32884 [sender.py:send_request():252] send_request: check_version
+2021-12-04 23:36:18,260 DEBUG   SenderThread:32884 [sender.py:send():238] send: run
+2021-12-04 23:36:18,260 INFO    SenderThread:32884 [sender.py:_maybe_setup_resume():506] checking resume status for None/U-Net/1amkgcb3
+2021-12-04 23:36:21,822 ERROR   SenderThread:32884 [retry.py:__call__():126] Retry attempt failed:
+Traceback (most recent call last):
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connection.py", line 175, in _new_conn
+    (self._dns_host, self.port), self.timeout, **extra_kw
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\util\connection.py", line 73, in create_connection
+    for res in socket.getaddrinfo(host, port, family, socket.SOCK_STREAM):
+  File "D:\anaconda3\envs\unet\lib\socket.py", line 745, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+socket.gaierror: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connectionpool.py", line 706, in urlopen
+    chunked=chunked,
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connectionpool.py", line 382, in _make_request
+    self._validate_conn(conn)
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connectionpool.py", line 1010, in _validate_conn
+    conn.connect()
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connection.py", line 358, in connect
+    conn = self._new_conn()
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connection.py", line 187, in _new_conn
+    self, "Failed to establish a new connection: %s" % e
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x000002869B6C72B0>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\adapters.py", line 449, in send
+    timeout=timeout
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\connectionpool.py", line 756, in urlopen
+    method, url, error=e, _pool=self, _stacktrace=sys.exc_info()[2]
+  File "D:\anaconda3\envs\unet\lib\site-packages\urllib3\util\retry.py", line 574, in increment
+    raise MaxRetryError(_pool, url, error or ResponseError(cause))
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.wandb.ai', port=443): Max retries exceeded with url: /graphql (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x000002869B6C72B0>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed',))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\anaconda3\envs\unet\lib\site-packages\wandb\sdk\lib\retry.py", line 102, in __call__
+    result = self._call_fn(*args, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\wandb\sdk\internal\internal_api.py", line 141, in execute
+    return self.client.execute(*args, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\wandb\vendor\gql-0.2.0\gql\client.py", line 52, in execute
+    result = self._get_result(document, *args, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\wandb\vendor\gql-0.2.0\gql\client.py", line 60, in _get_result
+    return self.transport.execute(document, *args, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\wandb\vendor\gql-0.2.0\gql\transport\requests.py", line 38, in execute
+    request = requests.post(self.url, **post_args)
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\api.py", line 117, in post
+    return request('post', url, data=data, json=json, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\api.py", line 61, in request
+    return session.request(method=method, url=url, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\sessions.py", line 542, in request
+    resp = self.send(prep, **send_kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\sessions.py", line 655, in send
+    r = adapter.send(request, **kwargs)
+  File "D:\anaconda3\envs\unet\lib\site-packages\requests\adapters.py", line 516, in send
+    raise ConnectionError(e, request=request)
+requests.exceptions.ConnectionError: HTTPSConnectionPool(host='api.wandb.ai', port=443): Max retries exceeded with url: /graphql (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x000002869B6C72B0>: Failed to establish a new connection: [Errno 11001] getaddrinfo failed',))
+2021-12-04 23:36:48,271 DEBUG   HandlerThread:32884 [handler.py:handle_request():130] handle_request: shutdown
+2021-12-04 23:36:48,271 INFO    HandlerThread:32884 [handler.py:finish():731] shutting down handler
+2021-12-04 23:36:48,630 INFO    WriterThread:32884 [datastore.py:close():281] close: D:\Pytorch-UNet-master\wandb\run-20211204_233614-1amkgcb3\run-1amkgcb3.wandb
