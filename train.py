@@ -17,7 +17,8 @@ from evaluate import evaluate
 from unet import UNet
 from utils.data_loading import BasicDataset, CarvanaDataset
 from utils.dice_score import dice_loss
-from dealdata import dealdata
+# from dealdata import dealdata
+# from dealdata import save
 
 dir_img = Path('./data/imgs/')
 dir_mask = Path('./data/masks/')
@@ -27,7 +28,7 @@ dir_checkpoint = Path('./checkpoints/')
 def train_net(net,
               device,
               epochs: int = 5,
-              batch_size: int = 1,
+              batch_size: int = 64,
               learning_rate: float = 0.001,
               val_percent: float = 0.1,
               save_checkpoint: bool = True,
@@ -42,8 +43,8 @@ def train_net(net,
     # 2. Split into train / validation partitions
     n_val = int(len(dataset) * val_percent)
     n_train = len(dataset) - n_val
-    train_set, val_set = random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
-
+    # train_set, val_set = random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(0))
+    train_set, val_set = random_split(dataset, [n_train, n_val])
     # 3. Create data loaders
     loader_args = dict(batch_size=batch_size, num_workers=1, pin_memory=True)
     train_loader = DataLoader(train_set, shuffle=True, **loader_args)
@@ -76,7 +77,8 @@ def train_net(net,
 
     # 5. Begin training
     for epoch in range(epochs):
-        net.train()
+        net.train().cuda()
+        max1=0
         epoch_loss = 0
         with tqdm(total=n_train, desc=f'Epoch {epoch + 1}/{epochs}', unit='img') as pbar:
             for batch in train_loader:
@@ -88,33 +90,24 @@ def train_net(net,
                     f'but loaded images have {images.shape[1]} channels. Please check that ' \
                     'the images are loaded correctly.'
 
-                images = images.to(device=device, dtype=torch.float32)
-                true_masks = true_masks.to(device=device, dtype=torch.long)
-
+                images = images.cuda()
+                true_masks = true_masks.cuda( )
                 # 二分类
-                true_masks = (true_masks / 255).long()
-                # true_masks = true_masks.squeeze(dim=0).tolist()
-                # 多分
-                # for i in range(2):
-                #
-                # a=true_masks.tolist()
-                # c={}
-                # for i,j in enumerate(a):
-                #     if not j in c.keys():
-                #         c[j]=0
-                #     else:
-                #         c[j]+=1
-                # a=max(true_masks1).max()
-                with torch.cuda.amp.autocast(enabled=amp):
-                    masks_pred = net(images)
-                    loss = criterion(masks_pred, true_masks) \
-                           + dice_loss(F.softmax(masks_pred, dim=1).float(),
-                                       F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
-                                       multiclass=True)
+                # a,b,c=true_masks.shape
+                true_masks_ = (true_masks / 255).long().sum()
+                true_masks=(true_masks/255).long()
+                if true_masks_<100:
+                    continue
+                # with torch.cuda.amp.autocast(enabled=amp):
+                masks_pred = net(images)
+                loss = criterion(masks_pred, true_masks) \
+                        + dice_loss(F.softmax(masks_pred, dim=1).float(),
+                                    F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
+                                    multiclass=True)
                     # loss=dice_loss(F.softmax(masks_pred, dim=1).float(),
                     #               F.one_hot(true_masks, net.n_classes).permute(0, 3, 1, 2).float(),
                     #                    multiclass=True)
-                optimizer.zero_grad(set_to_none=True)
+                optimizer.zero_grad()
                 grad_scaler.scale(loss).backward()
                 grad_scaler.step(optimizer)
                 grad_scaler.update()
@@ -165,7 +158,7 @@ def train_net(net,
 def get_args():
     parser = argparse.ArgumentParser(description='Train the UNet on images and target masks')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=5, help='Number of epochs')
-    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=1, help='Batch size')
+    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=256, help='Batch size')
     parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=0.00001,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
@@ -175,9 +168,9 @@ def get_args():
     parser.add_argument('--amp', action='store_true', default=False, help='Use mixed precision')
     parser.add_argument('--niipath', type=str, default="D:\Download\MICCAI_BraTS_2019_Data_Training\HGG",
                         help='Use mixed precision')
-    parser.add_argument('--datapathimg', type=str, default="./data/img",
+    parser.add_argument('--datapathimg', type=str, default="./data/imgs/",
                         help='Use mixed precision')
-    parser.add_argument('--datapathlabel', type=str, default="./data/masks",
+    parser.add_argument('--datapathlabel', type=str, default="./data/masks/",
                         help='Use mixed precision')
 
     return parser.parse_args()
@@ -187,18 +180,22 @@ if __name__ == '__main__':
     args = get_args()
     TrainingImagesList=[]
     TrainingLabelsList=[]
-    folder = os.listdir(args.niipath)
-    for i, path in enumerate(folder):
-        nowpath = os.path.join(args.niipath, path)
-        nnidata = os.listdir(nowpath)
-        for data in nnidata:
-            if data.split("_")[-1].split(".")[0] == "seg":
-                readfolderT = os.path.join(nowpath, data)
-            if data.split("_")[-1].split(".")[0] == "flair":
-                readfolderL = os.path.join(nowpath, data)
-        a=[]
-        b=[]
-        a,b=dealdata(readfolderT,readfolderL,args.datapathlabel,args.datapathlabel,a,b)
+    # folder = os.listdir(args.niipath)
+    # for i, path in enumerate(folder):
+    #     nowpath = os.path.join(args.niipath, path)
+    #     nnidata = os.listdir(nowpath)
+    #     for data in nnidata:
+    #         if data.split("_")[-1].split(".")[0] == "seg":
+    #             readfolderT = os.path.join(nowpath, data)
+    #         if data.split("_")[-1].split(".")[0] == "flair":
+    #             readfolderL = os.path.join(nowpath, data)
+    #     a=[]
+    #     b=[]
+    #     a,b=dealdata(readfolderT,readfolderL,a,b)
+    #     TrainingImagesList.extend(a)
+    #     TrainingLabelsList.extend(b)
+    # save(TrainingImagesList,TrainingLabelsList,args.datapathlabel,args.datapathimg)
+
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -218,7 +215,7 @@ if __name__ == '__main__':
         net.load_state_dict(torch.load(args.load, map_location=device))
         logging.info(f'Model loaded from {args.load}')
 
-    net.to(device=device)
+    net.cuda()
     try:
         train_net(net=net,
                   epochs=args.epochs,
